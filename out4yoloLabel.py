@@ -10,7 +10,6 @@ from os import walk, getcwd
 from PIL import Image
 import argparse
 import sys
-import cv2
 
 img_formats = ['.png', '.jpeg', '.jpg']
 # ----------------------------------
@@ -45,11 +44,6 @@ class ImageViewLoader:
          txt_outpath= os.path.sep.join([spec_dir,fileTag+".txt"])
          
          if xmlDir is None:
-            if border is not None:
-               img_path_ret=takefromtExtImg(img_path,txt_outpath,fileTag)
-               if img_path_ret is not None:
-                  img_path=img_path_ret
-            else:
                takefromtImg(img_path,txt_outpath)
          else:
             xml_path= os.path.sep.join([xmlDir,fileTag+".xml"])
@@ -147,68 +141,7 @@ def takefromtImg(img_path,txt_outpath):
    txt_outfile.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
    counts_dic[cls_id]=counts_dic[cls_id]+1      #counts++ for this label/class
    txt_outfile.close()
-# ----------------------------------
-# function: takefromtExtImg()   /* the expanded image with the new border */ 
-# ----------------------------------
-def takefromtExtImg(img_path,txt_outpath,fileTag):
-   global border
-   global outputDir
-   global mergein
-   global tabin
-   global bRGB
-   
-   if cls_id < 0:
-      print("[Error] unable to classiffy the label name !!!")
-      return None
 
-   saveDir= os.path.sep.join([outputDir,label_names[cls_id]])
-   if not os.path.exists(saveDir):
-      os.makedirs(saveDir)
-
-   new_txt_outpath = txt_outpath
-   newImg_path = os.path.sep.join([saveDir, fileTag+".jpg"])
-   newImg_path = os.path.abspath(newImg_path)
-   if mergein == 1:
-      new_txt_outpath = os.path.sep.join([saveDir, fileTag+".txt"])
-   txt_outfile = open(new_txt_outpath, "w")
-   cv2image = cv2.imread(img_path)
-   height, width, channels = cv2image.shape
-   xmin = 0
-   ymin = 0
-   xmax = w = width
-   ymax = h = height
-   if(width < border) or (height < border):
-      color=[bRGB[2], bRGB[1], bRGB[0]]      #RGB to BGR   // to OpenCV
-      w=max(border,width)
-      h=max(border,height)
-      left=int((w-width)/2)
-      right=left
-      top=int((h-height)/2)
-      bottom=top
-      cv2image=cv2.copyMakeBorder(cv2image,top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
-      xmin = xmin + left
-      ymin = ymin + top
-      xmax = xmin + width
-      ymax = ymin + height
-
-   # retracted by p(pixel) on each bndbox
-   p = tabin
-   w = w - 2*p
-   h = h - 2*p
-   xmin = xmin + p
-   ymin = ymin + p
-   xmax = xmin + w
-   ymax = ymin + h
-   
-   box = (float(xmin), float(xmax), float(ymin), float(ymax))
-   size=(w,h)
-   bb = convert(size, box)
-   txt_outfile.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
-   counts_dic[cls_id]=counts_dic[cls_id]+1      #counts++ for this label/class
-   txt_outfile.close()
-   cv2.imwrite(newImg_path,cv2image)
-   return newImg_path
-   
 # ----------------------------------
 # function: index_of()
 # ----------------------------------
